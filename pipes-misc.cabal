@@ -24,7 +24,7 @@ library
                      , pipes-concurrency
                      , stm
                      , transformers
-  ghc-options:         -Wall -threaded -rtsopts -with-rtsopts=-N
+  ghc-options:         -O2 -Wall
   default-language:    Haskell2010
 
 executable pipes-misc-exe
