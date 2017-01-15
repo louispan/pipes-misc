@@ -21,7 +21,10 @@ import qualified Pipes.Prelude as PP
 import qualified Data.List.NonEmpty as NE
 import Control.Monad.Except
 import Control.Applicative
-
+import Pipes.Internal (
+    Proxy(..),
+    closed
+    )
 -- | Like Pipes.Concurrent.fromInput, but stays in STM
 fromInputSTM :: PC.Input a -> P.Producer' a S.STM ()
 fromInputSTM as = void $ runMaybeT $ forever $ do
@@ -108,3 +111,18 @@ locally viewf modifyf p =
   PP.map (\s -> (s, s))
   P.>-> PPC.getPipeC (first $ PPC.PipeC $ PP.map viewf P.>-> p)
   P.>-> PP.map (uncurry modifyf)
+
+-- | This like next, but with the most general Proxy type, to allow stepping through
+-- pipe-like producers.
+-- This code is created by copying the code for next from Pipes.html and then
+-- letting ghc infer the type signature.
+next' ::
+  Monad m =>
+  Proxy P.X a () b m r -> m (Either r (b, Proxy P.X a () b m r))
+next' = go
+  where
+    go p = case p of
+        Request v _  -> closed v
+        Respond a fu -> return (Right (a, fu ()))
+        M         m  -> m >>= go
+        Pure    r    -> return (Left r)
