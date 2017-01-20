@@ -20,7 +20,7 @@ library
                      , lens >= 4 && < 5
                      , mtl >= 2 && < 3
                      , pipes >= 4 && < 5
-                     , pipes-category >= 0.1 && < 1
+                     , pipes-category >= 0.2 && < 0.3
                      , pipes-concurrency >= 2 && < 3
                      , stm >= 2.4 && < 3
                      , transformers >= 0.4 && < 0.6

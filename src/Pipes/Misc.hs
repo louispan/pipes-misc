@@ -13,7 +13,7 @@ import Control.Monad.State.Strict
 import Control.Monad.Trans.Maybe
 import qualified Pipes as P
 import qualified Pipes.Concurrent as PC
-import qualified Pipes.PipeC as PPC
+import qualified Pipes.Shaft as PS
 import qualified Pipes.Prelude as PP
 import qualified Data.List.NonEmpty as NE
 import Control.Monad.Except
@@ -103,5 +103,5 @@ locally ::
   -> P.Pipe s t m r
 locally viewf modifyf p =
   PP.map (\s -> (s, s))
-  P.>-> PPC.getPipeC (first $ PPC.PipeC $ PP.map viewf P.>-> p)
+  P.>-> PS.runShaft (first $ PS.Shaft $ PP.map viewf P.>-> p)
   P.>-> PP.map (uncurry modifyf)
