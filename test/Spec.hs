@@ -1,2 +1,29 @@
+module Main where
+
+import Control.Lens
+import Data.Foldable
+import qualified Pipes as P
+import qualified Pipes.Misc as PM
+import qualified Pipes.Prelude as PP
+import Test.Hspec
+
+data1 :: [Int]
+data1 = [1, 2..9]
+
+sig1 :: Monad m => P.Producer Int m ()
+sig1 = traverse_ P.yield data1
+
 main :: IO ()
-main = putStrLn "Test suite not yet implemented"
+main = do
+  hspec $ do
+      describe "Misc" $ do
+          it "Buffered" $ do
+              let xs = PP.toList (sig1 P.>-> PM.buffer 2 [])
+              xs `shouldBe` (pure $ head data1) : ((\(a, b) -> [a, b]) <$> zip (tail data1) data1)
+
+          it "Locally +10 to second" $ do
+              let xs = PP.toList
+                       (sig1
+                        P.>-> PP.map (\a -> (a, a))
+                        P.>-> PM.locally (view _2) (set _2) (PP.map (+ 10)))
+              xs `shouldBe` zip data1 ((+ 10) <$> data1)

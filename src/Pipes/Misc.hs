@@ -10,21 +10,15 @@ import qualified Control.Concurrent.STM as S
 import Control.Lens
 import Control.Monad
 import Control.Monad.State.Strict
-import Control.Monad.Trans.Class
 import Control.Monad.Trans.Maybe
-import Data.Tuple
 import qualified Pipes as P
 import qualified Pipes.Concurrent as PC
-import qualified Pipes.Lift as PL
 import qualified Pipes.PipeC as PPC
 import qualified Pipes.Prelude as PP
 import qualified Data.List.NonEmpty as NE
 import Control.Monad.Except
 import Control.Applicative
-import Pipes.Internal (
-    Proxy(..),
-    closed
-    )
+
 -- | Like Pipes.Concurrent.fromInput, but stays in STM
 fromInputSTM :: PC.Input a -> P.Producer' a S.STM ()
 fromInputSTM as = void $ runMaybeT $ forever $ do
