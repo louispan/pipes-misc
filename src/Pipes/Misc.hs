@@ -6,7 +6,7 @@
 module Pipes.Misc where
 
 import Control.Arrow
-import qualified Control.Concurrent.STM as S
+import Control.Concurrent.STM
 import Control.Lens
 import Control.Monad
 import Control.Monad.State.Strict
@@ -19,14 +19,18 @@ import qualified Data.List.NonEmpty as NE
 import Control.Monad.Except
 import Control.Applicative
 
--- | Like Pipes.Concurrent.fromInput, but stays in STM
-fromInputSTM :: PC.Input a -> P.Producer' a S.STM ()
+-- | Like Pipes.Concurrent.fromInput, but stays in STM.
+-- Using @hoist atomically@ to convert to IO monad seems to work.
+-- Do not use @unsafeHoist atomically@.
+fromInputSTM :: PC.Input a -> P.Producer' a STM ()
 fromInputSTM as = void $ runMaybeT $ forever $ do
     a <- MaybeT $ lift $ PC.recv as
     lift $ P.yield a
 
--- | Like Pipes.Concurrent.toOutput, but stays in STM
-toOutputSTM :: PC.Output a -> P.Consumer' a S.STM ()
+-- | Like Pipes.Concurrent.toOutput, but stays in STM.
+-- Using @hoist atomically@ to convert to IO monad seems to work.
+-- Do not use @unsafeHoist atomically@.
+toOutputSTM :: PC.Output a -> P.Consumer' a STM ()
 toOutputSTM output = void $ runMaybeT $ forever $ do
     a <- lift P.await
     p <- lift $ lift $ PC.send output a
