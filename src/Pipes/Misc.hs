@@ -109,3 +109,22 @@ locally viewf modifyf p =
   PP.map (\s -> (s, s))
   P.>-> PS.runShaft (first $ PS.Shaft $ PP.map viewf P.>-> p)
   P.>-> PP.map (uncurry modifyf)
+
+-- | Do something with the state everytime there is a yield.
+onState :: (MonadState s m) => (s -> m ()) -> P.Pipe a a m r
+onState f = PP.mapM $ \a -> do
+    s <- get
+    f s
+    pure a
+
+-- | Add a delay after every yield
+-- To avoid delaying the first yield use:
+--
+-- @
+-- Pipes.pull () >> delay d
+-- @
+--
+delay :: MonadIO io => Int -> P.Pipe a a io ()
+delay i = PP.mapM $ \a -> do
+    liftIO $ threadDelay i
+    pure a
