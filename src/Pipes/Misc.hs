@@ -1,23 +1,23 @@
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE RankNTypes #-}
 
 -- | Miscellaneous utilities for pipes, required by glazier-tutorial
 module Pipes.Misc where
 
+import Control.Applicative
 import Control.Arrow
+import Control.Concurrent
 import Control.Concurrent.STM
 import Control.Lens
 import Control.Monad
 import Control.Monad.State.Strict
 import Control.Monad.Trans.Maybe
+import Control.Monad.Except
+import qualified Data.List.NonEmpty as NE
 import qualified Pipes as P
 import qualified Pipes.Concurrent as PC
-import qualified Pipes.Shaft as PS
 import qualified Pipes.Prelude as PP
-import qualified Data.List.NonEmpty as NE
-import Control.Monad.Except
-import Control.Applicative
+import qualified Pipes.Shaft as PS
 
 -- | Like Pipes.Concurrent.fromInput, but stays in STM.
 -- Using @hoist atomically@ to convert to IO monad seems to work.
@@ -96,6 +96,25 @@ retrieve v = forever $ do
   a <- P.await
   s <- get
   P.yield (view v s, a)
+
+-- | Do something with the state everytime there is a yield.
+onState :: (MonadState s m) => (s -> m ()) -> P.Pipe a a m r
+onState f = P.for P.cat $ \a -> do
+    s <- get
+    lift $ f s
+    P.yield a
+
+-- | Add a delay after every yield
+-- To avoid delaying the first yield use:
+--
+-- @
+-- Pipes.pull () >> delay d
+-- @
+--
+delay :: MonadIO io => Int -> P.Pipe a a io ()
+delay i = P.for P.cat $ \a -> do
+  liftIO $ threadDelay i
+  P.yield a
 
 -- | Run a pipe in a larger stream, using view function and modify function
 -- of the larger stream.
