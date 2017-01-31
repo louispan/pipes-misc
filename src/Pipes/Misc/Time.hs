@@ -1,7 +1,3 @@
--- {-# LANGUAGE FunctionalDependencies #-}
--- {-# LANGUAGE MultiParamTypeClasses #-}
--- {-# LANGUAGE TemplateHaskell #-}
--- {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE RankNTypes #-}
 
 module Pipes.Misc.Time where
