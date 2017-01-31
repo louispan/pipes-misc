@@ -21,7 +21,9 @@ library
                        Pipes.Misc.Concurrent
                        Pipes.Misc.Time
   build-depends:       base >= 4.7 && < 5
+                     , clock >= 0.7 && < 1
                      , lens >= 4 && < 5
+                     , Decimal >= 0.4 && < 1
                      , mtl >= 2 && < 3
                      , pipes >= 4 && < 5
                      , pipes-category >= 0.2 && < 0.3
