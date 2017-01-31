@@ -1,5 +1,5 @@
 name:                pipes-misc
-version:             0.2.2.1
+version:             0.2.3.0
 synopsis:            Miscellaneous utilities for pipes, required by glazier-tutorial
 description:         Please see README.md
 homepage:            https://github.com/louispan/pipes-misc#readme
@@ -15,7 +15,11 @@ tested-with:         GHC == 7.10.3, GHC == 8.0.1
 
 library
   hs-source-dirs:      src
-  exposed-modules:     Pipes.Misc
+  exposed-modules:     Pipes.Misc.Util
+                       Pipes.Misc.State.Lazy
+                       Pipes.Misc.State.Strict
+                       Pipes.Misc.Concurrent
+                       Pipes.Misc.Time
   build-depends:       base >= 4.7 && < 5
                      , lens >= 4 && < 5
                      , mtl >= 2 && < 3
