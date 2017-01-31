@@ -28,15 +28,15 @@ toOutputSTM output = void $ runMaybeT $ forever $ do
     guard p
 
 -- | Converts a Producer in IO monad to a producer in STM monad.
-toSTM :: PC.Buffer a -> P.Producer a IO () -> IO (P.Producer a STM ())
-toSTM b xs = do
+mkProducerSTM :: PC.Buffer a -> P.Producer a IO () -> IO (P.Producer a STM ())
+mkProducerSTM b xs = do
     (output, input) <- PC.spawn b
     void . forkIO . void . forever . P.runEffect $ xs P.>-> PC.toOutput output
     pure (fromInputSTM input)
 
 -- | Converts a Producer in IO monad to a producer in STM monad. Also returns the seal.
-toSTM' :: PC.Buffer a -> P.Producer a IO () -> IO (STM (), P.Producer a STM ())
-toSTM' b xs = do
+mkProducerSTM' :: PC.Buffer a -> P.Producer a IO () -> IO (STM (), P.Producer a STM ())
+mkProducerSTM' b xs = do
     (output, input, seal) <- PC.spawn' b
     void . forkIO . void . forever . P.runEffect $ xs P.>-> PC.toOutput output
     pure (seal, fromInputSTM input)
