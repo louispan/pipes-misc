@@ -17,6 +17,7 @@ fromInputSTM :: PC.Input a -> P.Producer' a STM ()
 fromInputSTM as = void $ runMaybeT $ forever $ do
     a <- MaybeT $ lift $ PC.recv as
     lift $ P.yield a
+{-# INLINABLE fromInputSTM #-}
 
 -- | Like Pipes.Concurrent.toOutput, but stays in STM.
 -- Using @hoist atomically@ to convert to IO monad seems to work.
@@ -26,6 +27,12 @@ toOutputSTM output = void $ runMaybeT $ forever $ do
     a <- lift P.await
     p <- lift $ lift $ PC.send output a
     guard p
+{-# INLINABLE toOutputSTM #-}
+
+-- | Convert PC.Output @a -> STM Bool@ to @a -> MaybeT STM ()@
+toOutputMaybeT :: PC.Output a -> a -> MaybeT STM ()
+toOutputMaybeT output = (MaybeT . fmap guard) <$> PC.send output
+{-# INLINABLE toOutputMaybeT #-}
 
 -- | Converts a Producer in IO monad to a producer in STM monad.
 mkProducerSTM :: PC.Buffer a -> P.Producer a IO () -> IO (P.Producer a STM ())
@@ -33,6 +40,7 @@ mkProducerSTM b xs = do
     (output, input) <- PC.spawn b
     void . forkIO . void . forever . P.runEffect $ xs P.>-> PC.toOutput output
     pure (fromInputSTM input)
+{-# INLINABLE mkProducerSTM #-}
 
 -- | Converts a Producer in IO monad to a producer in STM monad. Also returns the seal.
 mkProducerSTM' :: PC.Buffer a -> P.Producer a IO () -> IO (STM (), P.Producer a STM ())
@@ -40,3 +48,4 @@ mkProducerSTM' b xs = do
     (output, input, seal) <- PC.spawn' b
     void . forkIO . void . forever . P.runEffect $ xs P.>-> PC.toOutput output
     pure (seal, fromInputSTM input)
+{-# INLINABLE mkProducerSTM' #-}

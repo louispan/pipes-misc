@@ -8,6 +8,8 @@ import qualified Pipes as P
 import qualified Pipes.Concurrent as PC
 import qualified Pipes.Prelude as PP
 import qualified Pipes.Shaft as PS
+import Pipes.Internal (Proxy(..))
+
 
 -- | Reads as much as possible from an input and return a list of all unblocked values read.
 -- Blocks if the first value read is blocked.
@@ -28,6 +30,7 @@ batch (PC.Input xs) = PC.Input $ do
       tryCons ys x = case x of
           Nothing -> Left ys -- return successful reads so far
           Just x' -> Right $ x' NE.<| ys
+{-# INLINABLE batch #-}
 
 -- | Given a size and a initial tail, create a pipe that
 -- will buffer the output of a producer.
@@ -55,6 +58,7 @@ buffer n as = do
  where
   -- from https://ro-che.info/articles/2015-05-28-force-list
   forceSpine = foldr (const id) ()
+{-# INLINABLE buffer #-}
 
 -- | Run a pipe in a larger stream, using view function and modify function
 -- of the larger stream.
@@ -68,3 +72,49 @@ locally viewf modifyf p =
   PP.map (\s -> (s, s))
   P.>-> PS.runShaft (first $ PS.Shaft $ PP.map viewf P.>-> p)
   P.>-> PP.map (uncurry modifyf)
+{-# INLINABLE locally #-}
+
+-- | Given comparison function and an initial value.
+-- yield the result of comparing the value await with the previously awaited value.
+compare :: Monad m => (a -> a -> b) -> a -> P.Pipe a b m r
+compare f i = do
+    a <- P.await
+    P.yield (f a i)
+    go a
+  where
+    go a = do
+        b <- P.await
+        P.yield (f b a)
+        go b
+{-# INLINABLE compare #-}
+
+-- | Given comparison function
+-- yield the result of comparing the value await with the first awaited value.
+compare' :: Monad m => (a -> a -> b) -> P.Pipe a b m r
+compare' f = do
+    i <- P.await
+    P.yield (f i i)
+    go i
+  where
+    go i = forever $ do
+        a <- P.await
+        P.yield (f a i)
+{-# INLINABLE compare' #-}
+
+-- | constantly yields the given value
+always :: Monad m => a -> P.Producer a m r
+always = forever . P.yield
+{-# INLINABLE always #-}
+
+-- | Makes the Producer return/pure the last value yielded, or the input value if nothing
+-- was yielded
+lastOr :: Monad m => a -> P.Producer a m () -> P.Producer a m a
+lastOr = go
+  where
+    go i p =
+        case p of
+            Request a' fa -> Request a' (go i . fa)
+            Respond b fb' -> Respond b (go b . fb')
+            M m -> M (m >>= pure . go i)
+            Pure () -> Pure i
+{-# INLINABLE lastOr #-}

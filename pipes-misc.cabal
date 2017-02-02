@@ -15,11 +15,12 @@ tested-with:         GHC == 7.10.3, GHC == 8.0.1
 
 library
   hs-source-dirs:      src
-  exposed-modules:     Pipes.Misc.Util
+  exposed-modules:     Pipes.Misc
+                       Pipes.Misc.Concurrent
                        Pipes.Misc.State.Lazy
                        Pipes.Misc.State.Strict
-                       Pipes.Misc.Concurrent
                        Pipes.Misc.Time
+                       Pipes.Misc.Util
   build-depends:       base >= 4.7 && < 5
                      , clock >= 0.7 && < 1
                      , lens >= 4 && < 5
