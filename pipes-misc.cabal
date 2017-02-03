@@ -41,8 +41,11 @@ test-suite pipes-misc-test
   main-is:             Spec.hs
   build-depends:       base >= 4.7 && < 5
                      , lens >=4 &&< 5
+                     , mmorph >= 1 && < 2
                      , pipes >= 4 && < 5
+                     , pipes-concurrency >= 2 && < 3
                      , pipes-misc
+                     , stm >= 2.4 && < 3
                      , transformers >= 0.4 && < 0.6
                      , hspec >= 2 && < 3
   ghc-options:         -Wall -threaded -rtsopts -with-rtsopts=-N

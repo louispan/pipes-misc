@@ -1,8 +1,11 @@
 module Main where
 
+import Control.Concurrent.STM
 import Control.Lens
+import Control.Monad.Morph
 import Data.Foldable
 import qualified Pipes as P
+import qualified Pipes.Concurrent as PC
 import qualified Pipes.Misc as PM
 import qualified Pipes.Prelude as PP
 import Test.Hspec
@@ -27,3 +30,6 @@ main = do
                         P.>-> PP.map (\a -> (a, a))
                         P.>-> PM.locally (view _2) (set _2) (PP.map (+ 10)))
               xs `shouldBe` zip data1 ((+ 10) <$> data1)
+          it "Filtering STM Producer blocks" $ do
+              sig <- PM.mkProducerSTM (PC.bounded 1) sig1
+              PP.toListM (hoist atomically (sig P.>-> PP.filter even)) `shouldThrow` anyException

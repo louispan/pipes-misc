@@ -13,6 +13,10 @@ import qualified Pipes.Concurrent as PC
 -- | Like Pipes.Concurrent.fromInput, but stays in STM.
 -- Using @hoist atomically@ to convert to IO monad seems to work.
 -- Do not use @unsafeHoist atomically@.
+-- Each transaction is `atomically` scoped around each yield,
+-- so be careful when `Pipes.Prelude.filter` or similar pipes to remove yields
+-- as this results in larger transactions and it may cause BlockIndefinitelyOnSTM exceptions.
+-- Intead, use Monoids to yield mempty so that the STM state changes.
 fromInputSTM :: PC.Input a -> P.Producer' a STM ()
 fromInputSTM as = void $ runMaybeT $ forever $ do
     a <- MaybeT $ lift $ PC.recv as
