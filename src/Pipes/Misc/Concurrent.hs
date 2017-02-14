@@ -2,11 +2,14 @@
 
 module Pipes.Misc.Concurrent where
 
+import Control.Applicative
 import Control.Concurrent
 import Control.Concurrent.STM
 import Control.Monad
 import Control.Monad.Trans.Class
+import Control.Monad.Trans.Except
 import Control.Monad.Trans.Maybe
+import qualified Data.List.NonEmpty as NE
 import qualified Pipes as P
 import qualified Pipes.Concurrent as PC
 
@@ -53,3 +56,24 @@ mkProducerSTM' b xs = do
     void . forkIO . void . forever . P.runEffect $ xs P.>-> PC.toOutput output
     pure (seal, fromInputSTM input)
 {-# INLINABLE mkProducerSTM' #-}
+
+-- | Reads as much as possible from an input and return a list of all unblocked values read.
+-- Blocks if the first value read is blocked.
+batch :: PC.Input a -> PC.Input (NE.NonEmpty a)
+batch (PC.Input xs) = PC.Input $ do
+    x <- xs
+    case x of
+        Nothing -> pure Nothing
+        Just x' -> do
+            xs' <- runExceptT . tryNext $ x' NE.:| []
+            case xs' of
+                Left ys -> pure (Just ys)
+                Right ys -> pure (Just ys)
+  where
+      tryNext ys = do
+          ys' <- ExceptT $ (tryCons ys <$> xs) <|> pure (Left ys)
+          tryNext ys'
+      tryCons ys x = case x of
+          Nothing -> Left ys -- return successful reads so far
+          Just x' -> Right $ x' NE.<| ys
+{-# INLINABLE batch #-}
