@@ -2,9 +2,14 @@
 
 module Pipes.Misc.State.Strict where
 
+import Control.Concurrent.STM
 import Control.Lens
+import Control.Monad.Morph
+import Control.Monad.Reader
 import Control.Monad.State.Strict
 import qualified Pipes as P
+import qualified Pipes.Concurrent as PC
+import qualified Pipes.Misc.Concurrent as PM
 import qualified Pipes.Prelude as PP
 
 -- | Store the output of the pipe into a MonadState.
@@ -38,3 +43,21 @@ onState f = PP.mapM $ \a -> do
     f s
     pure a
 {-# INLINABLE onState #-}
+
+-- | Converts a 'Glazier.Gadget' into a 'Pipes.Pipe'
+rsPipe :: (Monad m, MonadTrans t, MonadState s (t m)) => ReaderT a (StateT s m) b -> P.Pipe a b (t m) r
+rsPipe m = forever $ do
+    a <- P.await
+    s <- get
+    -- This is the only line that is different between the Strict and Lazy version
+    (c, s') <- lift . lift $ runStateT (runReaderT m a) s
+    put s'
+    P.yield c
+{-# INLINABLE rsPipe #-}
+
+-- | Convert a 'Pipes.Concurrent.Input' and a 'Glazier.Gadget' into a stateful 'Pipes.Producer' of commands to interpret.
+rsProducer ::
+  (MonadState s (t STM), MonadTrans t) =>
+  PC.Input a -> ReaderT a (StateT s STM) b -> P.Producer' b (t STM) ()
+rsProducer input m = hoist lift (PM.fromInputSTM input) P.>-> rsPipe m
+{-# INLINABLE rsProducer #-}
