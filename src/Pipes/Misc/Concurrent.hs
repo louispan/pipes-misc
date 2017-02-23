@@ -6,12 +6,14 @@ import Control.Applicative
 import Control.Concurrent
 import Control.Concurrent.STM
 import Control.Monad
-import Control.Monad.Trans.Class
+import Control.Monad.Morph
 import Control.Monad.Trans.Except
 import Control.Monad.Trans.Maybe
+import Control.Monad.Trans.Reader
 import qualified Data.List.NonEmpty as NE
 import qualified Pipes as P
 import qualified Pipes.Concurrent as PC
+import qualified Pipes.Prelude as PP
 
 -- | Like Pipes.Concurrent.fromInput, but stays in STM.
 -- Using @hoist atomically@ to convert to IO monad seems to work.
@@ -77,3 +79,12 @@ batch (PC.Input xs) = PC.Input $ do
           Nothing -> Left ys -- return successful reads so far
           Just x' -> Right $ x' NE.<| ys
 {-# INLINABLE batch #-}
+
+-- | Combine a 'Pipes.Concurrent.Input' and a 'ReaderT a STM r' into a 'Pipes.Producer' of the result r.
+-- That is, given a input of messages, and something that executes the messages to produce a result r,
+-- combine them to get a Producer of the executed results.
+execInput
+    :: (MonadTrans t, Monad (t STM))
+    => PC.Input a -> ReaderT a (t STM) b -> P.Producer' b (t STM) ()
+execInput input m = hoist lift (fromInputSTM input) P.>-> PP.mapM (runReaderT m)
+{-# INLINABLE execInput #-}
