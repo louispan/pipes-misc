@@ -31,7 +31,6 @@ delay :: MonadIO io => Int -> P.Pipe a a io r
 delay i = PP.mapM $ \a -> do
     liftIO $ threadDelay i
     pure a
-{-# INLINABLE delay #-}
 
 -- | After the first await, add a delay after every subsequent await.
 delay' :: MonadIO io => Int -> P.Pipe a a io r
@@ -39,12 +38,10 @@ delay' i = do
     a <- P.await
     P.yield a
     delay i
-{-# INLINABLE delay' #-}
 
 -- | obtain the threadDelay given a fps
 fps :: D.Decimal -> Int
 fps x = truncate (D.roundTo 0 (D.Decimal 0 1000000 / x))
-{-# INLINABLE fps #-}
 
 -- | Continuously yield the clock time
 -- Use with delay to reduce the yield rate. Eg:
@@ -58,14 +55,11 @@ ticker :: MonadIO io => C.Clock -> P.Pipe () C.TimeSpec io r
 ticker clock = P.for P.cat $ \() -> do
     t <- liftIO $ C.getTime clock
     P.yield t
-{-# INLINABLE ticker #-}
 
 -- | Converts a stream of times, into a stream of delta time. The first yield is zero.
 diffTime :: Monad m => P.Pipe C.TimeSpec C.TimeSpec m r
 diffTime = PM.compare C.diffTimeSpec (C.TimeSpec 0 0)
-{-# INLINABLE diffTime #-}
 
 -- | Converts a stream of epoch times into a stream of epoch time, where zero is the first yielded time.
 resetEpoch :: Monad m => P.Pipe C.TimeSpec C.TimeSpec m r
 resetEpoch = PM.compare' C.diffTimeSpec
-{-# INLINABLE resetEpoch #-}

@@ -36,7 +36,6 @@ buffer n as = do
  where
   -- from https://ro-che.info/articles/2015-05-28-force-list
   forceSpine = foldr (const id) ()
-{-# INLINABLE buffer #-}
 
 -- | Run a pipe in a larger stream, using view function and modify function
 -- of the larger stream.
@@ -50,7 +49,6 @@ locally viewf modifyf p =
   PP.map (\s -> (s, s))
   P.>-> PS.runShaft (first $ PS.Shaft $ PP.map viewf P.>-> p)
   P.>-> PP.map (uncurry modifyf)
-{-# INLINABLE locally #-}
 
 -- | Given comparison function and an initial value.
 -- yield the result of comparing the value await with the previously awaited value.
@@ -64,7 +62,6 @@ compare f i = do
         b <- P.await
         P.yield (f b a)
         go b
-{-# INLINABLE compare #-}
 
 -- | Given comparison function
 -- yield the result of comparing the value await with the first awaited value.
@@ -77,12 +74,10 @@ compare' f = do
     go i = forever $ do
         a <- P.await
         P.yield (f a i)
-{-# INLINABLE compare' #-}
 
 -- | constantly yields the given value
 always :: Monad m => a -> P.Producer a m r
 always = forever . P.yield
-{-# INLINABLE always #-}
 
 -- | Makes the Producer return/pure the last value yielded, or the input value if nothing
 -- was yielded
@@ -95,4 +90,3 @@ lastOr = go
             Respond b fb' -> Respond b (go b . fb')
             M m -> M (m >>= pure . go i)
             Pure () -> Pure i
-{-# INLINABLE lastOr #-}

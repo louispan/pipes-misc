@@ -9,7 +9,6 @@ import Control.Monad
 import Control.Monad.Morph
 import Control.Monad.Trans.Except
 import Control.Monad.Trans.Maybe
-import Control.Monad.Trans.Reader
 import qualified Data.List.NonEmpty as NE
 import qualified Pipes as P
 import qualified Pipes.Concurrent as PC
@@ -26,7 +25,6 @@ fromInputSTM :: PC.Input a -> P.Producer' a STM ()
 fromInputSTM as = void $ runMaybeT $ forever $ do
     a <- MaybeT $ lift $ PC.recv as
     lift $ P.yield a
-{-# INLINABLE fromInputSTM #-}
 
 -- | Like Pipes.Concurrent.toOutput, but stays in STM.
 -- Using @hoist atomically@ to convert to IO monad seems to work.
@@ -36,12 +34,10 @@ toOutputSTM output = void $ runMaybeT $ forever $ do
     a <- lift P.await
     p <- lift $ lift $ PC.send output a
     guard p
-{-# INLINABLE toOutputSTM #-}
 
 -- | Convert PC.Output @a -> STM Bool@ to @a -> MaybeT STM ()@
 toOutputMaybeT :: PC.Output a -> a -> MaybeT STM ()
 toOutputMaybeT output = (MaybeT . fmap guard) <$> PC.send output
-{-# INLINABLE toOutputMaybeT #-}
 
 -- | Converts a Producer in IO monad to a producer in STM monad.
 mkProducerSTM :: PC.Buffer a -> P.Producer a IO () -> IO (P.Producer a STM ())
@@ -49,7 +45,6 @@ mkProducerSTM b xs = do
     (output, input) <- PC.spawn b
     void . forkIO . void . forever . P.runEffect $ xs P.>-> PC.toOutput output
     pure (fromInputSTM input)
-{-# INLINABLE mkProducerSTM #-}
 
 -- | Converts a Producer in IO monad to a producer in STM monad. Also returns the seal.
 mkProducerSTM' :: PC.Buffer a -> P.Producer a IO () -> IO (STM (), P.Producer a STM ())
@@ -57,7 +52,6 @@ mkProducerSTM' b xs = do
     (output, input, seal) <- PC.spawn' b
     void . forkIO . void . forever . P.runEffect $ xs P.>-> PC.toOutput output
     pure (seal, fromInputSTM input)
-{-# INLINABLE mkProducerSTM' #-}
 
 -- | Reads as much as possible from an input and return a list of all unblocked values read.
 -- Blocks if the first value read is blocked.
@@ -78,13 +72,11 @@ batch (PC.Input xs) = PC.Input $ do
       tryCons ys x = case x of
           Nothing -> Left ys -- return successful reads so far
           Just x' -> Right $ x' NE.<| ys
-{-# INLINABLE batch #-}
 
--- | Combine a 'Pipes.Concurrent.Input' and a 'ReaderT a STM r' into a 'Pipes.Producer' of the result r.
--- That is, given a input of messages, and something that executes the messages to produce a result r,
+-- | Combine a 'Pipes.Concurrent.Input' and a 'a -> t STM b' into a 'Pipes.Producer' of the result b.
+-- That is, given a input of messages, and something that executes the messages to produce a result b,
 -- combine them to get a Producer of the executed results.
 execInput
     :: (MonadTrans t, Monad (t STM))
-    => PC.Input a -> ReaderT a (t STM) b -> P.Producer' b (t STM) ()
-execInput input m = hoist lift (fromInputSTM input) P.>-> PP.mapM (runReaderT m)
-{-# INLINABLE execInput #-}
+    => PC.Input a -> (a -> (t STM) b) -> P.Producer' b (t STM) ()
+execInput input f = hoist lift (fromInputSTM input) P.>-> PP.mapM f
