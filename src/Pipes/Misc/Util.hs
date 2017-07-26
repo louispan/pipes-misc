@@ -47,7 +47,7 @@ locally ::
   -> P.Pipe s t m r
 locally viewf modifyf p =
   PP.map (\s -> (s, s))
-  P.>-> PS.runShaft (first $ PS.Shaft $ PP.map viewf P.>-> p)
+  P.>-> PS.shafted (first $ PS.Shaft $ PP.map viewf P.>-> p)
   P.>-> PP.map (uncurry modifyf)
 
 -- | Given comparison function and an initial value.
