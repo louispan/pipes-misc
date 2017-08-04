@@ -12,7 +12,7 @@
 --
 -- diffAndTickEvery :: MonadIO io => C.Clock -> Int -> P.Producer' (C.TimeSpec, C.TimeSpec) io r
 -- diffAndTickEvery clock micros = always () P.>-> delay micros P.>-> ticker clock P.>->
---    PS.shafted (PS.Shaft diffTime &&& Cat.id)
+--    PS.fromShaft (PS.Shaft diffTime &&& Cat.id)
 --
 -- @
 --
