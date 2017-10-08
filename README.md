@@ -11,3 +11,6 @@ See also [slides](http://www.slideshare.net/LouisPan3/composable-widgets-with-re
 
 * 0.4.0.0
  - Fixes for pipes-category-0.3.0.0. Shaft destructor is now named fromShaft
+
+* 0.4.0.1
+ - Fixed version bounds for pipes-category.

@@ -1,5 +1,5 @@
 name:                pipes-misc
-version:             0.4.0.0
+version:             0.4.0.1
 synopsis:            Miscellaneous utilities for pipes, required by glazier-tutorial
 description:         Please see README.md
 homepage:            https://github.com/louispan/pipes-misc#readme
@@ -28,7 +28,7 @@ library
                      , mmorph >= 1 && < 2
                      , mtl >= 2 && < 3
                      , pipes >= 4 && < 5
-                     , pipes-category >= 0.2 && < 0.3
+                     , pipes-category >= 0.3 && < 0.4
                      , pipes-concurrency >= 2 && < 3
                      , semigroups >= 0.18 && < 1
                      , stm >= 2.4 && < 3
