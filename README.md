@@ -6,3 +6,8 @@ Miscellaneous utilities for pipes, required by glazier-tutorial
 See [Main.hs](app/Main.hs) for example usage.
 
 See also [slides](http://www.slideshare.net/LouisPan3/composable-widgets-with-reactive-pipes).
+
+# Changelog
+
+* 0.4.0.0
+ - Fixes for pipes-category-0.3.0.0. Shaft destructor is now named fromShaft
