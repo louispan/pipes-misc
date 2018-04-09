@@ -15,7 +15,7 @@
 # resolver:
 #  name: custom-snapshot
 #  location: "./custom-snapshot.yaml"
-resolver: nightly-2017-01-31
+resolver: nightly-2018-03-18
 # compiler-check: match-exact
 # setup-info:
 #   ghcjs:
@@ -49,6 +49,8 @@ packages:
 # (e.g., acme-missiles-0.3)
 extra-deps:
 - pipes-category-0.3.0.0
+- Decimal-0.5.1
+- pipes-concurrency-2.0.10
 
 # Override default flag values for local packages and extra-deps
 flags: {}

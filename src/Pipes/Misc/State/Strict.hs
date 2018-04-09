@@ -15,15 +15,15 @@ store v s = forever $ do
   P.yield a
 
 -- | Yields a view into the stored value.
-retrieve :: MonadState s m => Getter s b -> P.Pipe a (b, a) m r
-retrieve v = forever $ do
+restore :: MonadState s m => Getter s b -> P.Pipe a (b, a) m r
+restore v = forever $ do
   a <- P.await
   s <- get
   P.yield (view v s, a)
 
 -- | Yields a view into the stored value
-retrieve' :: MonadState s m => Getter s b -> P.Pipe () b m r
-retrieve' v = forever $ do
+restore' :: MonadState s m => Getter s b -> P.Pipe () b m r
+restore' v = forever $ do
   P.await
   s <- get
   P.yield (view v s)
