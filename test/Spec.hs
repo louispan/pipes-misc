@@ -1,12 +1,12 @@
 module Main where
 
-import Control.Concurrent
-import Control.Concurrent.STM
+-- import Control.Concurrent
+-- import Control.Concurrent.STM
 import Control.Lens
-import Control.Monad.Morph
+-- import Control.Monad.Morph
 import Data.Foldable
 import qualified Pipes as P
-import qualified Pipes.Concurrent as PC
+-- import qualified Pipes.Concurrent as PC
 import qualified Pipes.Misc as PM
 import qualified Pipes.Prelude as PP
 import Test.Hspec
